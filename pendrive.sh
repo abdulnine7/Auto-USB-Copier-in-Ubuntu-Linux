@@ -11,7 +11,7 @@
 #
 ##################################################################################################
 
-setup=true
+setup=false
 
 die() {
   echo -e "\033[1;31m$@\033[0m"
@@ -23,8 +23,7 @@ message(){
 	notify-send "$@" -t 500
 }
 
-#Usb Device connected message
-message "Usb Device Connected"
+message "hi"
 
 #Setup for running
 if $setup; then
@@ -33,20 +32,25 @@ if $setup; then
 		die "For Setup run as root..."
 	fi
 	
+	user=`who | cut -d ' ' -f 1`
+	
 	sudo touch /etc/udev/rules.d/pendrive.rules
-	sudo echo "ACTION==\"add\",KERNEL==\"sd*\", SUBSYSTEMS==\"usb\", ATTRS{idProduct}==\"*\", ATTRS{idVendor}==\"*\", RUN+=\"/home/qwerty/pendrive.sh %k\"" > /etc/udev/rules.d/pendrive.rules
+	sudo echo "ACTION==\"add\",KERNEL==\"sd*\", ATTRS{idVendor}==\"*\", ATTRS{idProduct}==\"*\", RUN+=\"/usr/bin/sudo -u $user /home/$user/pendrive.sh\"" > /etc/udev/rules.d/pendrive.rules
 	sudo /etc/init.d/udev restart
 	sudo udevadm control --reload-rules
 	die "Setup successful"
 fi
 
 #Getting mountpoint of the usb drives
-
+sleep 5
 usb_dirs=(`lsblk -l | grep -e part -e disk | grep sd[bc] | awk '{ printf $7 "\n"; }'`)
 
 if [ ${#usb_dirs[@]} -eq 0 ]; then
 	die "\nNo USB Device connected...\n"
 fi
+
+#Usb Device connected message
+message "Usb Device Connected"
 
 #Copiying the data from pendrive
 
